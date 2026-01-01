@@ -71,7 +71,10 @@ function initMap() {
     map = L.map('map', { zoomControl: false }).setView(defaultLoc, 15);
 
     // Add tile layer
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '' }).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: ''
+    }).addTo(map);
 
     // Robot icon
     const robotIcon = L.divIcon({
@@ -82,7 +85,7 @@ function initMap() {
     });
 
     // Initialize marker at default location (hidden)
-    marker = L.marker(defaultLoc, { icon: robotIcon }).addTo(map);
+    let marker = L.marker(defaultLoc, { icon: robotIcon }).addTo(map);
     marker.setOpacity(0); // hide initially
 
     onValue(ref(db, 'robot/location'), (snap) => {
@@ -95,9 +98,6 @@ function initMap() {
         const { lat, lng } = val;
         document.getElementById('val-lat').innerText = lat.toFixed(5);
         document.getElementById('val-lng').innerText = lng.toFixed(5);
-        document.getElementById('gps-status').innerText = "SIGNAL LOCKED";
-        document.getElementById('gps-status').className = "text-xs text-green-500 font-bold";
-
 
         const newLoc = [lat, lng];
 
@@ -226,8 +226,8 @@ onValue(ref(db, 'robot/status'), (snapshot) => {
     const noiseElem = document.getElementById('val-noise');
     noiseElem.innerText = noise;
 
-    // Visual Threshold Check for Noise > 200
-    if (noise > 200) {
+    // Visual Threshold Check for Noise > 40
+    if (noise > 40) {
         noiseElem.className = "text-2xl font-bold text-red-500 animate-pulse";
     } else {
         noiseElem.className = "text-2xl font-bold";
@@ -235,12 +235,12 @@ onValue(ref(db, 'robot/status'), (snapshot) => {
 
     const alertBox = document.getElementById('alert-box');
     // Check specific threat detection alerts OR direct noise threshold logic
-    if (data.alerts?.suspicious_sound_alert || data.alerts?.movement_theft_alert || noise > 200) {
+    if (data.alerts?.noise_alert || data.alerts?.theft_alert || noise > 40) {
         alertBox.className = "mt-2 p-1 text-center text-xs rounded font-bold alert-active border border-red-500 bg-red-900/50 text-red-100";
 
         let threatType = "THREAT DETECTED";
-        if (data.alerts?.movement_theft_alert) threatType = "THEFT (MOTION)";
-        else if (data.alerts?.suspicious_sound_alert || noise > 200) threatType = "NOISE LEVEL HIGH";
+        if (data.alerts?.theft_alert) threatType = "THEFT (MOTION)";
+        else if (data.alerts?.noise_alert || noise > 40) threatType = "NOISE LEVEL HIGH";
 
         alertBox.innerText = `⚠️ SECURITY ALERT: ${threatType}`;
     } else {
